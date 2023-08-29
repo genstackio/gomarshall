@@ -3,6 +3,7 @@ package gomarshall
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 )
 
 type Options struct {
@@ -68,12 +69,14 @@ func RawValueToValue(v reflect.Value, opts Options) interface{} {
 		m, x, y := map[string]interface{}{}, v.Type(), v
 		for i := 0; i < x.NumField(); i++ {
 			kk := x.Field(i)
-			k := kk.Name
 			vv := y.Field(i)
 			if kk.IsExported() {
 				v := RawValueToValue(vv, opts)
 				if !opts.IgnoreNil || nil != v {
-					m[k] = v
+					exported, name := ReadReflectedTypeJsonTag(kk)
+					if exported {
+						m[name] = v
+					}
 				}
 			}
 		}
@@ -85,6 +88,15 @@ func RawValueToValue(v reflect.Value, opts Options) interface{} {
 	}
 }
 
+func ReadReflectedTypeJsonTag(kk reflect.StructField) (bool, string) {
+	z := kk.Tag.Get("json")
+	if len(z) == 0 {
+		return true, kk.Name
+	}
+	tokens := strings.SplitN(z, ",", 3)
+
+	return true, tokens[0]
+}
 func ValueToMarshallable(s interface{}, opts Options) interface{} {
 	return RawValueToValue(reflect.ValueOf(s), opts)
 }
