@@ -9,6 +9,8 @@ type Options struct {
 	IgnoreNil bool
 }
 
+var defaultOptions = Options{IgnoreNil: true}
+
 func RawValueToValue(v reflect.Value, opts Options) interface{} {
 	switch v.Kind() {
 	case reflect.Slice:
@@ -89,4 +91,9 @@ func ValueToMarshallable(s interface{}, opts Options) interface{} {
 
 func ToJsonBytes(s interface{}, opts Options) ([]byte, error) {
 	return json.Marshal(ValueToMarshallable(s, opts))
+}
+
+//goland:noinspection GoUnusedExportedFunction
+func V(s interface{}) interface{} {
+	return ValueToMarshallable(s, defaultOptions)
 }
